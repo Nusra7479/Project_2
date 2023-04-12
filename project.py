@@ -1,6 +1,8 @@
 from interface import Analyzer_GUI
 import PySimpleGUI as sg
 from explain import Explain
+import json
+
 
 gui = Analyzer_GUI()
 win = gui.create_win()
@@ -46,18 +48,19 @@ while True:
         q1 = values['q1']
         q2 = values['q2']
 
-        print(q1)
         if q1:
             try:
-                p1 = explain.get_explain(q1)
-                win['p1'].update(p1)
+                p1 = explain.get_plan(q1)
+                json_formatted_str_p1 = json.dumps(p1, indent=2)
+                win['p1'].update(json_formatted_str_p1)
             except:
                 sg.Popup("Please check Query 1's format")
 
         if q2:
             try:
-                p2 = explain.get_explain(q2)
-                win['p2'].update(p2)
+                p2 = explain.get_plan(q2)
+                json_formatted_str_p2 = json.dumps(p2, indent=2)
+                win['p2'].update(json_formatted_str_p2)
             except:
                 sg.Popup("Please check Query 2's format")
 
