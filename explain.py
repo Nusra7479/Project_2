@@ -87,7 +87,6 @@ def explain_changes(qep_text1, qep_text2):
     else:
         return "\n".join(generate_explanation(tree1, tree2))
 
-
 explanation_mapping = {
     ('hash_join', 'sort_merge_join'): 'A hash join has been changed to a sort-merge join due to changes in the WHERE clause.',
     ('sort_merge_join', 'hash_join'): 'A sort-merge join has been changed to a hash join due to changes in the WHERE clause.',
@@ -105,8 +104,6 @@ explanation_mapping = {
     ('no_materialize', 'materialize'): 'Materialization has been added to improve the performance of a subquery or common table expression.',
 }
 
-
-
 def parse_qep_node(json_node):
     operation = json_node["Node Type"]
     children = []
@@ -120,3 +117,122 @@ def parse_qep_node(json_node):
 def parse_qep(json_qep):
     json_plan = json.loads(json_qep)[0]["Plan"]
     return parse_qep_node(json_plan)
+
+
+example_json_qep = '''
+[
+  {
+    "Plan": {
+      "Node Type": "Nested Loop",
+      "Parallel Aware": false,
+      "Join Type": "Inner",
+      "Startup Cost": 0.0,
+      "Total Cost": 7756209.0,
+      "Plan Rows": 1500000,
+      "Plan Width": 244,
+      "Actual Startup Time": 8.015,
+      "Actual Total Time": 11.419,
+      "Actual Rows": 1500000,
+      "Actual Loops": 1,
+      "Plans": [
+        {
+          "Node Type": "Seq Scan",
+          "Parent Relationship": "Outer",
+          "Parallel Aware": false,
+          "Relation Name": "customer",
+          "Alias": "c",
+          "Startup Cost": 0.0,
+          "Total Cost": 3191.5,
+          "Plan Rows": 1500,
+          "Plan Width": 200,
+          "Actual Startup Time": 0.008,
+          "Actual Total Time": 0.631,
+          "Actual Rows": 1500,
+          "Actual Loops": 1
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Parent Relationship": "Inner",
+          "Parallel Aware": false,
+          "Relation Name": "orders",
+          "Alias":           "o",
+          "Startup Cost": 0.0,
+          "Total Cost": 5150677.0,
+          "Plan Rows": 1500000,
+          "Plan Width": 44,
+          "Actual Startup Time": 0.006,
+          "Actual Total Time": 4.133,
+          "Actual Rows": 1500000,
+          "Actual Loops": 1500
+        }
+      ]
+    }
+  }
+]
+'''
+
+# Load the JSON QEP from the string
+qep1 = parse_qep(example_json_qep)
+
+
+example_json_qep2 = '''
+[
+  {
+    "Plan": {
+      "Node Type": "Nested Loop",
+      "Parallel Aware": false,
+      "Join Type": "Inner",
+      "Startup Cost": 0.0,
+      "Total Cost": 7756209.0,
+      "Plan Rows": 1500000,
+      "Plan Width": 244,
+      "Actual Startup Time": 8.015,
+      "Actual Total Time": 11.419,
+      "Actual Rows": 1500000,
+      "Actual Loops": 1,
+      "Plans": [
+        {
+          "Node Type": "Index Scan",
+          "Parent Relationship": "Outer",
+          "Parallel Aware": false,
+          "Relation Name": "customer",
+          "Alias": "c",
+          "Startup Cost": 0.0,
+          "Total Cost": 3191.5,
+          "Plan Rows": 1500,
+          "Plan Width": 200,
+          "Actual Startup Time": 0.008,
+          "Actual Total Time": 0.631,
+          "Actual Rows": 1500,
+          "Actual Loops": 1
+        },
+        {
+          "Node Type": "Seq Scan",
+          "Parent Relationship": "Inner",
+          "Parallel Aware": false,
+          "Relation Name": "orders",
+          "Alias": "o",
+          "Startup Cost": 0.0,
+          "Total Cost": 5150677.0,
+          "Plan Rows": 1500000,
+          "Plan Width": 44,
+          "Actual Startup Time": 0.006,
+          "Actual Total Time": 4.133,
+          "Actual Rows": 1500000,
+          "Actual Loops": 1500
+        }
+      ]
+    }
+  }
+]
+'''
+
+# Parse the second example JSON QEP
+qep2 = parse_qep(example_json_qep2)
+
+# Generate explanations
+explanations = generate_explanation(qep1, qep2)
+
+# Print explanations
+for explanation in explanations:
+    print(explanation)
