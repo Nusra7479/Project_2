@@ -1,16 +1,35 @@
-# This is a sample Python script.
+from interface import Analyzer_GUI
+import PySimpleGUI as sg
+import explain
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+gui = Analyzer_GUI()
+win = gui.create_win()
+while True:
+    event, values = win.read()
+    if event == 'Generate Explanation':
+        q1 = values['q1']
+        p1 = values['p1']
+        q2 = values['q2']
+        p2 = values['p2']
 
+        ########################### Insert Explanation To Be Displayed Below ######################
+        explanation = "Q1: " + q1 + "\nQ2: " + q2 + "\np1 " + p1 + "\np2 " + p2
+        ############################################################################################
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+        win['res'].update(explanation)
 
+    if event == 'Generate Query Plan':
+        q1 = values['q1']
+        q2 = values['q2']
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+        # p1 = explain.get_explain(q1)
+        # p2 = explain.get_explain(q2)
+        p2 = 'sample 1'
+        p1 = 'sample 2'
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        win['p1'].update(p1)
+        win['p2'].update(p2)
+
+    if event == sg.WIN_CLOSED:
+        break
+
