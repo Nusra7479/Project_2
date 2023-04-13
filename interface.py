@@ -30,8 +30,10 @@ class Analyzer_GUI:
             [sg.Push(), sg.Column(col1_layout), sg.VSeparator(), sg.Column(col2_layout), sg.Push(),],
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
-            [sg.Push(), sg.Text("Explanation:", font='Bahnschrift 25', size=(120, 1)), sg.Push()],
-            [sg.Text(key='res')]
+            [sg.Text("Explanation:", font='Bahnschrift 25')],
+            # [sg.Text(key='res', expand_y=True, expand_x=True)]
+            [sg.Sizer(v_pixels=10)],
+            [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
 
             # [sg.Frame(
             #     '',
@@ -39,8 +41,9 @@ class Analyzer_GUI:
             #     border_width=1,
             # )],
         ]
+        win_layout = [[sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col')]]
 
-        window = sg.Window("Demo", win_layout)
+        window = sg.Window("Demo", win_layout, resizable=True)
         window.finalize().maximize()
 
         return window
@@ -143,7 +146,7 @@ class Analyzer_GUI:
                 p1 = values['p1']
                 q2 = values['q2']
                 p2 = values['p2']
-                win['res'].update("Q1: "+ q1 + "\nQ2: "+ q2 + "\np1 " + p1 + "\np2 "+ p2)
+                win['res'].update("Q1: "+ q1 + "\nQ2: "+ q2 + "\np1 " + p1 + "\np2 "+ p2, size=(None))
 
             if event == sg.WIN_CLOSED:
                 break
