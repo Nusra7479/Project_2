@@ -1,22 +1,20 @@
 import psycopg2
-import json
-# from config import connection_string
 
-# connection_string format: "db_name=<> user=<> password=<>" (no commas)
 
 class Explain:
+    # connection_string format: "db_name=<> user=<> password=<>" (no commas)
     def __init__(self, connection_string):
-        self.conn = psycopg2.connect(connection_string) # move this to inside fn? or to project.py
+        self.conn = psycopg2.connect(connection_string)
 
 
-    def get_explain(self, query):
-
+    # returns plan JSON object
+    def get_plan(self, query):
         cur = self.conn.cursor()
         cur.execute("EXPLAIN (FORMAT JSON) " + query)
         res = cur.fetchall()
-        json_formatted_str = json.dumps(res, indent=2)
-        print(json_formatted_str)
-        return json_formatted_str
+        plan_object = res[0][0][0]
+        return plan_object
+
 
     def test(self):
         test_query_1 = "select * from public.customer limit 100"
@@ -25,7 +23,7 @@ class Explain:
                         where C.c_acctbal < 5000
                         limit 100"""
 
-        self.get_explain(test_query_1)
+        self.get_plan(test_query_1)
 
 
 
@@ -34,8 +32,11 @@ class QEPNode:
         self.operation = operation
         self.children = children if children is not None else []
 
+
     def add_child(self, child):
         self.children.append(child)
+
+
 
 def compare_nodes(node1, node2):
     if node1.operation != node2.operation:
@@ -49,6 +50,7 @@ def compare_nodes(node1, node2):
             return False
 
     return True
+
 
 def compare_trees(tree1, tree2):
     return compare_nodes(tree1, tree2)
@@ -77,10 +79,9 @@ def generate_explanation(node1, node2):
     return explanation
 
 
-
-def explain_changes(qep_text1, qep_text2):
-    tree1 = parse_qep(qep_text1)
-    tree2 = parse_qep(qep_text2)
+def explain_changes(qep1, qep2):
+    tree1 = parse_qep(qep1)
+    tree2 = parse_qep(qep2)
 
     if compare_trees(tree1, tree2):
         return "No changes detected between the two query execution plans."
@@ -106,7 +107,6 @@ explanation_mapping = {
 }
 
 
-
 def parse_qep_node(json_node):
     operation = json_node["Node Type"]
     children = []
@@ -117,6 +117,26 @@ def parse_qep_node(json_node):
 
     return QEPNode(operation, children)
 
+
 def parse_qep(json_qep):
-    json_plan = json.loads(json_qep)[0]["Plan"]
-    return parse_qep_node(json_plan)
+    root_object = json_qep["Plan"]
+    return parse_qep_node(root_object)
+
+
+# # testing for explain.py
+# test_query_1 = "select * from public.customer "
+# test_query_2 = "select * from public.customer limit 100"
+
+# connection_string = "<connection_string>"
+# conn = psycopg2.connect(connection_string)
+# cur = conn.cursor()
+
+# explain = Explain(connection_string)
+# qep1 = explain.get_plan(test_query_1)
+# qep2 = explain.get_plan(test_query_2)
+
+# # Generate explanations
+# explanations = explain_changes(qep1, qep2)
+
+# # Print explanations
+# print(explanations)
