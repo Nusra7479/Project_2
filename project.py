@@ -1,6 +1,6 @@
 from interface import Analyzer_GUI
 import PySimpleGUI as sg
-from explain import Explain
+from explain import Explain, explain_changes
 import json
 
 
@@ -32,10 +32,15 @@ while True:
         p1 = values['p1']
         q2 = values['q2']
         p2 = values['p2']
+        win['exp_tab'].select()
 
-
+        if not (p1 and p2):
+            sg.Popup('Please input 2 query plans')
+            continue
         ########################### Insert Explanation To Be Displayed Below ######################
-        explanation = "Q1: " + q1 + "\nQ2: " + q2 + "\np1 " + p1 + "\np2 " + p2
+        p1_json = json.loads(p1)
+        p2_json = json.loads(p2)
+        explanation = explain_changes(p1_json, p2_json)
         ############################################################################################
 
         win['res'].update(explanation)
@@ -67,9 +72,22 @@ while True:
     if event == 'Visualise Query Plan':
         p1 = values['p1']
         p2 = values['p2']
+        win['img_tab'].select()
 
-        gui.visualise_graph(p1)
+        ########################### Insert Images To Be Displayed Below ######################
+        img1 = 'banana.png'
+        img2 = 'banana.png'
+        ############################################################################################
 
+        if p1:
+            win['img1'].update(img1) ## Enter image file path to be displayed for query 1
+
+        if p2:
+            win['img2'].update(img2)  ## Enter image file path to be displayed for query 2
+        # gui.visualise_graph(p1)
+
+    if event == 'Reset':
+        gui.reset(win)
 
     if event == sg.WIN_CLOSED:
         break

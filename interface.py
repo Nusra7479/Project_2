@@ -21,25 +21,35 @@ class Analyzer_GUI:
                        [sg.Multiline(key='p2', size=(50, 8))],
                        ]
 
+        exp_tab = sg.Tab('Explanation', [
+            [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
+        ], expand_y=True, expand_x=True, key='exp_tab')
+
+        img_tab = sg.Tab('Query Plan Diagram', [
+            [sg.Column(
+                [[sg.Text("Query Plan 1")], [sg.Image(key='img1')]]
+            , expand_y=True, expand_x=True),
+            sg.VSeparator(),
+            sg.Column(
+                [[sg.Text("Query Plan 2")], [sg.Image(key='img2')]]
+            , expand_y=True, expand_x=True)]
+        ], expand_y=True, expand_x=True, key='img_tab')
+
         win_layout = [
             [sg.Push(), sg.Text("CZ4031 QEP Analyser", font='Bahnschrift 30'), sg.Push()],
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button('Connect to PostgreSQL Database'), sg.Push()],
-            [sg.Push(), sg.Combo(values=samples, key='samples', size=(20,1), readonly=True), sg.Combo(values=['Query 1', 'Query 2'], key='sam_q', size=(20,1), readonly=True, default_value='Query 1'), sg.Button('Test'), sg.Push()],
+            [sg.Push(), sg.Combo(values=samples, key='samples', size=(20,1), readonly=True), sg.Combo(values=['Query 1', 'Query 2'], key='sam_q', size=(20,1), readonly=True, default_value='Query 1'),
+             sg.Button('Test'), sg.Button("Reset", button_color='red'), sg.Push()],
             [sg.Sizer(v_pixels=40)],
             [sg.Push(), sg.Column(col1_layout), sg.VSeparator(), sg.Column(col2_layout), sg.Push(),],
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
-            [sg.Text("Explanation:", font='Bahnschrift 25')],
-            # [sg.Text(key='res', expand_y=True, expand_x=True)]
-            [sg.Sizer(v_pixels=10)],
-            [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
-
-            # [sg.Frame(
-            #     '',
-            #     [[sg.Text(key='res')]],
-            #     border_width=1,
-            # )],
+            [sg.Text("Rsults:", font='Bahnschrift 25')],
+            # # [sg.Text(key='res', expand_y=True, expand_x=True)]
+            # [sg.Sizer(v_pixels=10)],
+            # [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
+            [sg.TabGroup([[exp_tab, img_tab]], expand_y=True, expand_x=True)],
         ]
         win_layout = [[sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col')]]
 
@@ -59,8 +69,17 @@ class Analyzer_GUI:
         return samples
 
     def get_connection_string(self):
-        text = sg.PopupGetText('Please enter connection string for connecting to PostgreSQL Database \n\nFormat: "dbname=<enter database name> user=<enter username> password=<enter password>" (no commas)', title="Connection String")
+        text = sg.PopupGetText('Please enter connection string for connecting to PostgreSQL Database \n\nFormat: dbname=<enter database name> user=<enter username> password=<enter password> (no commas)', title="Connection String")
         return text
+
+    def reset(self, win):
+        win['q1'].update('')
+        win['q2'].update('')
+        win['p1'].update('')
+        win['p2'].update('')
+        win['res'].update('')
+        win['img1'].update('')
+        win['img2'].update('')
 
     def visualise_graph(self, query_plan_json): ## does not work
         query_plan = json.loads(query_plan_json)
@@ -135,19 +154,4 @@ class Analyzer_GUI:
             else:
                 text_elem.update(font=(values['-list-'][0], 25))
         window.close()
-
-    def main(self):
-        win = self.create_win().finalize()
-        win.maximize()
-        while True:
-            event, values = win.read()
-            if event == 'Generate Explanation':
-                q1 = values['q1']
-                p1 = values['p1']
-                q2 = values['q2']
-                p2 = values['p2']
-                win['res'].update("Q1: "+ q1 + "\nQ2: "+ q2 + "\np1 " + p1 + "\np2 "+ p2, size=(None))
-
-            if event == sg.WIN_CLOSED:
-                break
 
