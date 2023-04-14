@@ -27,11 +27,11 @@ class Analyzer_GUI:
 
         img_tab = sg.Tab('Query Plan Diagram', [
             [sg.Column(
-                [[sg.Text("Query Plan 1")], [sg.Image(key='img1')]]
+                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Image(key='img1')]]
             , expand_y=True, expand_x=True),
             sg.VSeparator(),
             sg.Column(
-                [[sg.Text("Query Plan 2")], [sg.Image(key='img2')]]
+                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Image(key='img2')]]
             , expand_y=True, expand_x=True)]
         ], expand_y=True, expand_x=True, key='img_tab')
 

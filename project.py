@@ -1,6 +1,6 @@
 from interface import Analyzer_GUI
 import PySimpleGUI as sg
-from explain import Explain, explain_changes
+from explain import Explain, explain_changes, visualise_qep
 import json
 
 
@@ -80,10 +80,12 @@ while True:
         ############################################################################################
 
         if p1:
-            win['img1'].update(img1) ## Enter image file path to be displayed for query 1
+            # win['img1'].update(img1) ## Enter image file path to be displayed for query 1
+            win['tree1'].update(visualise_qep(json.loads(p1)))
 
         if p2:
-            win['img2'].update(img2)  ## Enter image file path to be displayed for query 2
+            # win['img2'].update(img2)  ## Enter image file path to be displayed for query 2
+            win['tree2'].update(visualise_qep(json.loads(p2)))
         # gui.visualise_graph(p1)
 
     if event == 'Reset':
@@ -91,4 +93,5 @@ while True:
 
     if event == sg.WIN_CLOSED:
         break
+
 

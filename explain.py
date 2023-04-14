@@ -36,7 +36,29 @@ class QEPNode:
     def add_child(self, child):
         self.children.append(child)
 
+def visualize_tree(root, level=0, tree_print=''):
+    if root is None:
+        return tree_print
 
+    # print('  ' * level + '+-' + str(root.operation))
+    tree_print = tree_print + '  ' * level + '+-' + str(root.operation) + '\n'
+
+    for child in root.children[:-1]:
+        tree_print = visualize_tree(child, level + 1, tree_print)
+        # print('  ' * (level + 1) + '|')
+        tree_print = tree_print + '  ' * (level + 1) + '|' + '\n'
+
+    if root.children:
+        tree_print = visualize_tree(root.children[-1], level + 1, tree_print)
+
+    return tree_print
+
+def visualise_qep(qep):
+    tree = parse_qep(qep)
+    vis = visualize_tree(tree)
+    print()
+    print(vis)
+    return vis
 
 def compare_nodes(node1, node2):
     if node1.operation != node2.operation:
