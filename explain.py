@@ -78,6 +78,29 @@ def compare_trees(tree1, tree2):
     return compare_nodes(tree1, tree2)
 
 
+def min_edit_distance(node1_children, node2_children, memo=None):
+    if memo is None:
+        memo = {}
+
+    if not node1_children:
+        return len(node2_children)
+    if not node2_children:
+        return len(node1_children)
+
+    if (len(node1_children), len(node2_children)) in memo:
+        return memo[(len(node1_children), len(node2_children))]
+
+    substitution = min_edit_distance(node1_children[1:], node2_children[1:], memo)
+    if node1_children[0].operation != node2_children[0].operation:
+        substitution += 1
+
+    deletion = min_edit_distance(node1_children[1:], node2_children, memo) + 1
+    insertion = min_edit_distance(node1_children, node2_children[1:], memo) + 1
+
+    result = min(substitution, deletion, insertion)
+    memo[(len(node1_children), len(node2_children))] = result
+    return result
+
 def generate_explanation(node1, node2):
     explanation = []
 
@@ -85,18 +108,31 @@ def generate_explanation(node1, node2):
         key = (node1.operation, node2.operation)
         explanation.append(explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}."))
 
-    common_children = min(len(node1.children), len(node2.children))
+    edit_distance = min_edit_distance(node1.children, node2.children)
+    matched_indices = []
 
-    for child1, child2 in zip(node1.children[:common_children], node2.children[:common_children]):
-        explanation.extend(generate_explanation(child1, child2))
+    for i, child1 in enumerate(node1.children):
+        min_dist = float('inf')
+        min_j = -1
 
-    # Handle additional or removed nodes in the select operation
-    if len(node1.children) > len(node2.children):
-        for child in node1.children[common_children:]:
-            explanation.append(f"A {child.operation} node has been removed from the {node1.operation} operation.")
-    elif len(node2.children) > len(node1.children):
-        for child in node2.children[common_children:]:
-            explanation.append(f"A new {child.operation} node has been added to the {node2.operation} operation.")
+        for j, child2 in enumerate(node2.children):
+            if j not in matched_indices:
+                dist = min_edit_distance(child1.children, child2.children)
+                if dist < min_dist:
+                    min_dist = dist
+                    min_j = j
+
+        if min_j != -1:
+            matched_indices.append(min_j)
+            explanation.extend(generate_explanation(child1, node2.children[min_j]))
+
+    for i, child1 in enumerate(node1.children):
+        if i not in matched_indices:
+            explanation.append(f"A {child1.operation} node has been removed from the {node1.operation} operation.")
+
+    for j, child2 in enumerate(node2.children):
+        if j not in matched_indices:
+            explanation.append(f"A new {child2.operation} node has been added to the {node2.operation} operation.")
 
     return explanation
 
