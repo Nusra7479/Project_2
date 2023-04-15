@@ -1,5 +1,5 @@
 import psycopg2
-
+import matplotlib.pyplot as plt
 
 class Explain:
     # connection_string format: "db_name=<> user=<> password=<>" (no commas)
@@ -53,12 +53,34 @@ def visualize_tree(root, level=0, tree_print=''):
 
     return tree_print
 
-def visualise_qep(qep):
+def visualise_qep(qep, ax):
     tree = parse_qep(qep)
     vis = visualize_tree(tree)
+    ax = visualize_tree_as_flowchart(tree, ax)
+    ax.axis('off')
+    # plt.show()
     print()
     print(vis)
-    return vis
+    return vis, ax
+
+def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0):
+    if ax is None:
+        fig, ax = plt.subplots()
+
+    if root is None:
+        return ax
+
+    ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
+    children = root.children
+    if children:
+        num_children = len(children)
+        child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
+        for child, child_x_offset in zip(children, child_x_offsets):
+            ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - 1, x_offset, y_offset)
+            ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - 1 + y_offset], 'k-')
+
+    return ax
 
 def compare_nodes(node1, node2):
     if node1.operation != node2.operation:

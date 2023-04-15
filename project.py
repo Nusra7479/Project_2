@@ -1,5 +1,7 @@
 from interface import Analyzer_GUI
 import PySimpleGUI as sg
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from explain import Explain, explain_changes, visualise_qep
 import json
 
@@ -7,6 +9,10 @@ import json
 gui = Analyzer_GUI()
 win = gui.create_win()
 explain = None
+ax1 = None
+ax2 = None
+canvas1 = None
+canvas2 = None
 
 while True:
     event, values = win.read()
@@ -74,22 +80,36 @@ while True:
         p2 = values['p2']
         win['img_tab'].select()
 
-        ########################### Insert Images To Be Displayed Below ######################
-        img1 = 'banana.png'
-        img2 = 'banana.png'
-        ############################################################################################
-
         if p1:
-            # win['img1'].update(img1) ## Enter image file path to be displayed for query 1
-            win['tree1'].update(visualise_qep(json.loads(p1)))
+            fig1, ax1 = plt.subplots()
+            text1, ax1 = visualise_qep(json.loads(p1), ax1)
+            win['tree1'].update(text1)
+            canvas1 = FigureCanvasTkAgg(fig1, win['canvas1'].Widget)
+            plot_widget1 = canvas1.get_tk_widget()
+            plot_widget1.grid(row=0, column=0)
+            canvas1.draw()
 
         if p2:
-            # win['img2'].update(img2)  ## Enter image file path to be displayed for query 2
-            win['tree2'].update(visualise_qep(json.loads(p2)))
+            fig2, ax2 = plt.subplots()
+            text2, ax2 = visualise_qep(json.loads(p2), ax2)
+            win['tree2'].update(text2)
+            canvas2 = FigureCanvasTkAgg(fig2, win['canvas2'].Widget)
+            plot_widget2 = canvas2.get_tk_widget()
+            plot_widget2.grid(row=0, column=0)
+            canvas2.draw()
+        win.finalize().maximize()
         # gui.visualise_graph(p1)
 
     if event == 'Reset':
         gui.reset(win)
+        if ax1:
+            ax1.clear()
+            ax1.axis('off')
+            canvas1.draw()
+        if ax2:
+            ax2.clear()
+            ax2.axis('off')
+            canvas2.draw()
 
     if event == sg.WIN_CLOSED:
         break

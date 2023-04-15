@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 import networkx as nx
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import json
 
 class Analyzer_GUI:
@@ -25,15 +26,28 @@ class Analyzer_GUI:
             [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
         ], expand_y=True, expand_x=True, key='exp_tab')
 
-        img_tab = sg.Tab('Query Plan Diagram', [
-            [sg.Column(
-                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Image(key='img1')]]
+
+        img_col = sg.Column([ [sg.Column(
+                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]]
             , expand_y=True, expand_x=True),
             sg.VSeparator(),
             sg.Column(
-                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Image(key='img2')]]
+                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')] ]
             , expand_y=True, expand_x=True)]
-        ], expand_y=True, expand_x=True, key='img_tab')
+        ], expand_y=True, expand_x=True,scrollable=True, vertical_alignment='center', vertical_scroll_only=True)
+
+        img_tab = sg.Tab('Query Plan Diagram', [
+        #     [sg.Column(
+        #         [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]]
+        #     , expand_y=True, expand_x=True),
+        #     sg.VSeparator(),
+        #     sg.Column(
+        #         [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')] ]
+        #     , expand_y=True, expand_x=True)]
+        # ],
+            [img_col]
+            ],
+                         expand_y=True, expand_x=True, key='img_tab')
 
         win_layout = [
             [sg.Push(), sg.Text("CZ4031 QEP Analyser", font='Bahnschrift 30'), sg.Push()],
@@ -78,8 +92,7 @@ class Analyzer_GUI:
         win['p1'].update('')
         win['p2'].update('')
         win['res'].update('')
-        win['img1'].update('')
-        win['img2'].update('')
+
 
     def visualise_graph(self, query_plan_json): ## does not work
         query_plan = json.loads(query_plan_json)
