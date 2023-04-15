@@ -28,11 +28,12 @@ class Explain:
 
 
 class QEPNode:
-    def __init__(self, operation, children=None):
+    def __init__(self, operation, rows, relationName, children=None):
         self.operation = operation
         self.children = children if children is not None else []
-
-
+        self.rows = rows
+        self.relationName = relationName
+        
     def add_child(self, child):
         self.children.append(child)
 
@@ -88,6 +89,12 @@ def compare_nodes(node1, node2):
 
     if len(node1.children) != len(node2.children):
         return False
+    
+    # Same scan can be done on different tables: must return false
+    if "Scan" in node1.operation:
+        if node1.relationName != node2.relationName:
+            return False
+
 
     for child1, child2 in zip(node1.children, node2.children):
         if not compare_nodes(child1, child2):
@@ -126,9 +133,31 @@ def min_edit_distance(node1_children, node2_children, memo=None):
 def generate_explanation(node1, node2):
     explanation = []
 
-    if node1.operation != node2.operation:
-        key = (node1.operation, node2.operation)
-        explanation.append(explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}."))
+    # Same or different scans
+    if "Scan" in node1.operation and "Scan" in node2.operation:
+        # As long as different tables, generic explanation
+        if node1.relationName != node2.relationName:
+                explanation.append("The table '{relation2}' has been scanned instead of the table '{relation1}'.".format(relation2 = node2.relationName, relation1 = node1.relationName))
+
+    else:
+        if node1.operation != node2.operation:
+            key = (node1.operation, node2.operation)
+            mapping = explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}.")
+            if node1.operation in joins and node2.operation in joins:
+                rows1 = node1.children[0].rows
+                rows2 = node1.children[1].rows
+                rows3 = node2.children[0].rows
+                rows4 = node2.children[1].rows
+
+                explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
+            # Different scans
+            elif "Scan" in node1.operation and "Scan" in node2.operation:
+                # Must have Relation Name because scan
+                # Must be same relation
+                explanation.append(mapping)
+            else:
+                explanation.append(mapping)    
+                
 
     edit_distance = min_edit_distance(node1.children, node2.children)
     matched_indices = []
@@ -168,20 +197,31 @@ def explain_changes(qep1, qep2):
     else:
         return "\n".join(generate_explanation(tree1, tree2))
 
+joins = [
+    'Hash Join',
+    'Merge Join',
+    'Nested Loop'
+]
 
 explanation_mapping = {
-    ('hash_join', 'sort_merge_join'): 'A hash join has been changed to a sort-merge join due to changes in the WHERE clause.',
-    ('sort_merge_join', 'hash_join'): 'A sort-merge join has been changed to a hash join due to changes in the WHERE clause.',
-    ('nested_loop_join', 'hash_join'): 'A nested loop join has been changed to a hash join because a more efficient join strategy was determined.',
-    ('hash_join', 'nested_loop_join'): 'A hash join has been changed to a nested loop join because a more efficient join strategy was determined.',
-    ('nested_loop_join', 'sort_merge_join'): 'A nested loop join has been changed to a sort-merge join because a more efficient join strategy was determined.',
-    ('sort_merge_join', 'nested_loop_join'): 'A sort-merge join has been changed to a nested loop join because a more efficient join strategy was determined.',
-    ('seq_scan', 'index_scan'): 'A sequential scan has been changed to an index scan, as an index was found to improve performance.',
-    ('index_scan', 'seq_scan'): 'An index scan has been changed to a sequential scan, as a sequential scan was determined to be more efficient in this case.',
-    ('bitmap_index_scan', 'index_scan'): 'A bitmap index scan has been changed to an index scan due to changes in the WHERE clause or the addition of an ORDER BY clause.',
-    ('index_scan', 'bitmap_index_scan'): 'An index scan has been changed to a bitmap index scan because it was determined to be more efficient for the query.',
-    ('bitmap_heap_scan', 'seq_scan'): 'A bitmap heap scan has been changed to a sequential scan because it was determined to be more efficient for the query.',
-    ('seq_scan', 'bitmap_heap_scan'): 'A sequential scan has been changed to a bitmap heap scan because it was determined to be more efficient for the query.',
+    ('Hash Join', 'Merge Join'): 'A hash join has been changed to a sort-merge join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Merge Join', 'Hash Join'): 'A sort-merge join has been changed to a hash join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Nested Loop', 'Hash Join'): 'A nested loop join has been changed to a hash join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Hash Join', 'Nested Loop'): 'A hash join has been changed to a nested loop join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Nested Loop', 'Merge Join'): 'A nested loop join has been changed to a sort-merge join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Merge Join', 'Nested Loop'): 'A sort-merge join has been changed to a nested loop join. This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
+    ('Seq Scan', 'Index Scan'): 'A sequential scan has been changed to an index scan, as an index was found to improve performance.',
+    ('Index Scan', 'Seq Scan'): 'An index scan has been changed to a sequential scan, as a sequential scan was determined to be more efficient in this case.',
+    ('bitmap_index_scan', 'Index Scan'): 'A bitmap index scan has been changed to an index scan due to changes in the WHERE clause or the addition of an ORDER BY clause.',
+    ('Index Scan', 'bitmap_index_scan'): 'An index scan has been changed to a bitmap index scan because it was determined to be more efficient for the query.',
+    ('bitmap_heap_scan', 'Seq Scan'): 'A bitmap heap scan has been changed to a sequential scan because it was determined to be more efficient for the query.',
+    ('Seq Scan', 'bitmap_heap_scan'): 'A sequential scan has been changed to a bitmap heap scan because it was determined to be more efficient for the query.',
     ('materialize', 'no_materialize'): 'Materialization has been removed due to changes in the query that made it unnecessary.',
     ('no_materialize', 'materialize'): 'Materialization has been added to improve the performance of a subquery or common table expression.',
 }
@@ -190,12 +230,18 @@ explanation_mapping = {
 def parse_qep_node(json_node):
     operation = json_node["Node Type"]
     children = []
+    rows = json_node["Plan Rows"]
+
+    if "Relation Name" in json_node.keys():
+        relationName = json_node["Relation Name"]
+    else:
+        relationName = None 
 
     if "Plans" in json_node:
         for child in json_node["Plans"]:
             children.append(parse_qep_node(child))
 
-    return QEPNode(operation, children)
+    return QEPNode(operation, rows, relationName, children)
 
 
 def parse_qep(json_qep):
