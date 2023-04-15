@@ -1,0 +1,3 @@
+PySimpleGUI
+matplotlib
+psycopg2

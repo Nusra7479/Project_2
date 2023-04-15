@@ -1,8 +1,4 @@
 import PySimpleGUI as sg
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import json
 
 class Analyzer_GUI:
     def create_win(self):
@@ -27,27 +23,19 @@ class Analyzer_GUI:
         ], expand_y=True, expand_x=True, key='exp_tab')
 
 
-        img_col = sg.Column([ [sg.Column(
-                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]]
-            , expand_y=True, expand_x=True),
+        img_col = sg.Column([[
+            sg.Column(
+                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]],
+                 expand_y=True, expand_x=True
+            ),
             sg.VSeparator(),
             sg.Column(
-                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')] ]
-            , expand_y=True, expand_x=True)]
-        ], expand_y=True, expand_x=True,scrollable=True, vertical_alignment='center', vertical_scroll_only=True)
+                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')]],
+                expand_y=True, expand_x=True)
+        ]],
+        expand_y=True, expand_x=True,scrollable=True, vertical_alignment='center', vertical_scroll_only=True)
 
-        img_tab = sg.Tab('Query Plan Diagram', [
-        #     [sg.Column(
-        #         [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]]
-        #     , expand_y=True, expand_x=True),
-        #     sg.VSeparator(),
-        #     sg.Column(
-        #         [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')] ]
-        #     , expand_y=True, expand_x=True)]
-        # ],
-            [img_col]
-            ],
-                         expand_y=True, expand_x=True, key='img_tab')
+        img_tab = sg.Tab('Query Plan Diagram', [[img_col]], expand_y=True, expand_x=True, key='img_tab')
 
         win_layout = [
             [sg.Push(), sg.Text("CZ4031 QEP Analyser", font='Bahnschrift 30'), sg.Push()],
@@ -60,9 +48,6 @@ class Analyzer_GUI:
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
             [sg.Text("Rsults:", font='Bahnschrift 25')],
-            # # [sg.Text(key='res', expand_y=True, expand_x=True)]
-            # [sg.Sizer(v_pixels=10)],
-            # [sg.Multiline(key='res', expand_y=True, expand_x=True, disabled=True, size=(None, 20))],
             [sg.TabGroup([[exp_tab, img_tab]], expand_y=True, expand_x=True)],
         ]
         win_layout = [[sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col')]]
@@ -74,6 +59,7 @@ class Analyzer_GUI:
 
     def get_sample_queries(self):
         samples = [
+                    "select * from public.customer",
                    "select * from public.customer limit 100",
                    """select C.c_name, C.c_address, O.o_totalprice
                       from public.customer as C join public.orders as O on C.c_custkey = O.o_custkey
@@ -92,35 +78,6 @@ class Analyzer_GUI:
         win['p1'].update('')
         win['p2'].update('')
         win['res'].update('')
-
-
-    def visualise_graph(self, query_plan_json): ## does not work
-        query_plan = json.loads(query_plan_json)
-        G = nx.DiGraph()
-
-        # Define a function to recursively add nodes and edges to the graph
-        def add_nodes_edges(plan, parent_node=None):
-            for node in plan:
-                node_type = node["Node Type"]
-                G.add_node(node_type)
-                if parent_node is not None:
-                    G.add_edge(parent_node, node_type)
-                if "Plans" in node:
-                    add_nodes_edges(node["Plans"], node_type)
-
-        # Call the function to add nodes and edges to the graph starting from the root node
-        add_nodes_edges(query_plan)
-
-        # Create a layout for the graph
-        pos = nx.planar_layout(G)
-
-        # Draw the graph with labels
-        nx.draw(G, pos, with_labels=True, node_size=1500, font_size=12, font_color="white", node_color="skyblue",
-                edge_color="gray")
-
-        # Show the flowchart
-        plt.title("Query Plan Flowchart")
-        plt.show()
 
     def preview_fonts(self):
         '''

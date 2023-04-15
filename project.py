@@ -59,21 +59,25 @@ while True:
         q1 = values['q1']
         q2 = values['q2']
 
-        if q1:
-            try:
-                p1 = explain.get_plan(q1)
-                json_formatted_str_p1 = json.dumps(p1, indent=2)
-                win['p1'].update(json_formatted_str_p1)
-            except:
-                sg.Popup("Please check Query 1's format")
+        p1 = explain.get_plan(q1)
+        p2 = explain.get_plan(q2)
 
-        if q2:
-            try:
-                p2 = explain.get_plan(q2)
-                json_formatted_str_p2 = json.dumps(p2, indent=2)
-                win['p2'].update(json_formatted_str_p2)
-            except:
-                sg.Popup("Please check Query 2's format")
+        if (not p1) and (not p2):
+            sg.Popup("Please check the format of Query 1 & 2")
+            continue
+            
+        if p1:
+            json_formatted_str_p1 = json.dumps(p1, indent=2)
+            win['p1'].update(json_formatted_str_p1)
+        else:
+            sg.Popup("Please check Query 1's format")
+
+        if p2:
+            json_formatted_str_p2 = json.dumps(p2, indent=2)
+            win['p2'].update(json_formatted_str_p2)
+        else:
+            sg.Popup("Please check Query 2's format")
+
 
     if event == 'Visualise Query Plan':
         p1 = values['p1']

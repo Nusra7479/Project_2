@@ -10,7 +10,12 @@ class Explain:
     # returns plan JSON object
     def get_plan(self, query):
         cur = self.conn.cursor()
-        cur.execute("EXPLAIN (FORMAT JSON) " + query)
+        try:
+            cur.execute("EXPLAIN (FORMAT JSON) " + query)
+        except Exception as e:
+            self.conn.rollback()
+            print(e)
+            return None
         res = cur.fetchall()
         plan_object = res[0][0][0]
         return plan_object
@@ -24,8 +29,6 @@ class Explain:
                         limit 100"""
 
         self.get_plan(test_query_1)
-
-
 
 class QEPNode:
     def __init__(self, operation, rows, relationName, children=None):
@@ -64,7 +67,26 @@ def visualise_qep(qep, ax):
     print(vis)
     return vis, ax
 
-def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0):
+# def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0):
+#     if ax is None:
+#         fig, ax = plt.subplots()
+#
+#     if root is None:
+#         return ax
+#
+#     ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+#
+#     children = root.children
+#     if children:
+#         num_children = len(children)
+#         child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
+#         for child, child_x_offset in zip(children, child_x_offsets):
+#             ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - 1, x_offset, y_offset)
+#             ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - 1 + y_offset], 'k-')
+#
+#     return ax
+
+def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0, level_height=2):
     if ax is None:
         fig, ax = plt.subplots()
 
@@ -78,8 +100,8 @@ def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0)
         num_children = len(children)
         child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
         for child, child_x_offset in zip(children, child_x_offsets):
-            ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - 1, x_offset, y_offset)
-            ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - 1 + y_offset], 'k-')
+            ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - level_height, x_offset, y_offset, level_height)
+            ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - level_height + y_offset], 'k-')
 
     return ax
 
