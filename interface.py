@@ -51,7 +51,7 @@ class Analyzer_GUI:
             [sg.Text("Results:", font='Bahnschrift 25')],
             [sg.TabGroup([[exp_tab, img_tab]], expand_y=True, expand_x=True)],
         ]
-        win_layout = [[sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col')]]
+        win_layout = [[sg.Push(), sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col'), sg.Push()]]
 
         window = sg.Window("Demo", win_layout, resizable=True)
         window.finalize().maximize()
