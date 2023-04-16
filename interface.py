@@ -25,15 +25,16 @@ class Analyzer_GUI:
 
         img_col = sg.Column([[
             sg.Column(
-                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Text(key='tree1')], [sg.Canvas(size=(400, 600), key='canvas1')]],
-                 expand_y=True, expand_x=True
+                [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Push(), sg.Canvas(key='canvas1', size=(None, 800),), sg.Push()], [sg.Canvas(key='controls1')], [sg.Text(key='tree1')]],
+                 expand_y=True, expand_x=True,
             ),
             sg.VSeparator(),
             sg.Column(
-                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Text(key='tree2')], [sg.Canvas(size=(400, 600), key='canvas2')]],
-                expand_y=True, expand_x=True)
+                [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Push(), sg.Canvas(key='canvas2', size=(None, 800),), sg.Push()],[sg.Canvas(key='controls2')], [sg.Text(key='tree2')]],
+                expand_y=True, expand_x=True,
+            )
         ]],
-        expand_y=True, expand_x=True,scrollable=True, vertical_alignment='center', vertical_scroll_only=True)
+        expand_y=True, expand_x=True, scrollable=True,vertical_alignment='center', vertical_scroll_only=True, size=(None, 800))
 
         img_tab = sg.Tab('Query Plan Diagram', [[img_col]], expand_y=True, expand_x=True, key='img_tab')
 
@@ -56,6 +57,15 @@ class Analyzer_GUI:
         window.finalize().maximize()
 
         return window
+
+    def clear_toolbar(self, tool_canvas):
+        if tool_canvas.children:
+            for child in tool_canvas.winfo_children():
+                if child.mode:
+                    sg.Popup("Deselect toolbar")
+                    return False
+                child.destroy()
+        return True
 
     def get_sample_queries(self):
         samples = [

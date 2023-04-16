@@ -62,43 +62,50 @@ def visualise_qep(qep, ax):
     vis = visualize_tree(tree)
     ax = visualize_tree_as_flowchart(tree, ax)
     ax.axis('off')
-    # plt.show()
-    print()
     print(vis)
     return vis, ax
 
-# def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0):
-#     if ax is None:
-#         fig, ax = plt.subplots()
-#
-#     if root is None:
-#         return ax
-#
-#     ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
-#
-#     children = root.children
-#     if children:
-#         num_children = len(children)
-#         child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
-#         for child, child_x_offset in zip(children, child_x_offsets):
-#             ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - 1, x_offset, y_offset)
-#             ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - 1 + y_offset], 'k-')
-#
-#     return ax
-
-def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0, level_height=2):
+def visualize_tree_as_flowchart(root, ax=None, x=0, y=0, x_offset=0, y_offset=0, level_height=1):
     if ax is None:
         fig, ax = plt.subplots()
 
     if root is None:
         return ax
 
-    ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+    if 'scan' in root.operation.lower():
+        # Draw the operation box
+        ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center',
+                bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+
+        # Draw the relationship box
+        ax.text(x + x_offset, y + y_offset - level_height, root.relationName, ha='center', va='center', #color='white',
+                bbox=dict(facecolor='yellow', edgecolor='black', boxstyle='round'))
+
+        # Draw a line connecting the operation and relationship boxes
+        ax.plot([x + x_offset, x + x_offset], [y + y_offset, y + y_offset - level_height], 'k-')
+    else:
+        ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center',
+                bbox=dict(facecolor='white', edgecolor='black', boxstyle='round',))
+
+    # ax.text(x + x_offset, y + y_offset, root.operation, ha='center', va='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
 
     children = root.children
     if children:
         num_children = len(children)
-        child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
+        if num_children > 1:
+            # Calculate the total width of children nodes
+            children_width = num_children * level_height
+
+            # Calculate the leftmost and rightmost x-coordinates for the children nodes
+            leftmost_child_x = x - children_width // 2
+            rightmost_child_x = x + children_width // 2
+
+            # Update the x-coordinates for the child nodes based on the calculated leftmost and rightmost x-coordinates
+            child_x_offsets = range(leftmost_child_x, rightmost_child_x + 1)
+        else:
+            # If there is only one child, place it directly below the parent node
+            child_x_offsets = [x]
+        # child_x_offsets = range(x - num_children // 2 + x_offset, x + num_children // 2 + 1 + x_offset)
         for child, child_x_offset in zip(children, child_x_offsets):
             ax = visualize_tree_as_flowchart(child, ax, child_x_offset, y - level_height, x_offset, y_offset, level_height)
             ax.plot([x + x_offset, child_x_offset], [y + y_offset, y - level_height + y_offset], 'k-')

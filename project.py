@@ -1,19 +1,22 @@
 from interface import Analyzer_GUI
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from explain import Explain, explain_changes, visualise_qep
 import json
 
-
+## Initialise
 gui = Analyzer_GUI()
 win = gui.create_win()
+
 explain = None
 ax1 = None
 ax2 = None
 canvas1 = None
 canvas2 = None
 
+## Run the GUI
 while True:
     event, values = win.read()
     if event == 'Connect to PostgreSQL Database':
@@ -48,6 +51,8 @@ while True:
         p2_json = json.loads(p2)
         explanation = explain_changes(p1_json, p2_json)
         ############################################################################################
+        print(explanation)
+
         win['res'].update(explanation)
 
     if event == 'Generate Query Plan':
@@ -68,13 +73,13 @@ while True:
         if p1:
             json_formatted_str_p1 = json.dumps(p1, indent=2)
             win['p1'].update(json_formatted_str_p1)
-        else:
+        elif q1:
             sg.Popup("Please check Query 1's format")
 
         if p2:
             json_formatted_str_p2 = json.dumps(p2, indent=2)
             win['p2'].update(json_formatted_str_p2)
-        else:
+        elif q2:
             sg.Popup("Please check Query 2's format")
 
 
@@ -83,25 +88,44 @@ while True:
         p2 = values['p2']
         win['img_tab'].select()
 
+        ## set fig1
+        mode1 = gui.clear_toolbar(win['controls1'].TKCanvas)
+        if mode1 is False: continue
+        fig1 = Figure(figsize=(5, 6))
+        # fig1.subplots_adjust(0,0,1,1,0,0)
+        fig1.subplots_adjust(hspace=0, wspace=0)
+        ax1 = fig1.add_subplot(1, 1, 1)
+        ax1.axis('off')
+        canvas1 = FigureCanvasTkAgg(fig1, win['canvas1'].Widget)
+        plot_widget1 = canvas1.get_tk_widget()
+        plot_widget1.grid(row=0, column=0)
+        canvas1.draw()
+
+        ## set fig2
+        mode2 = gui.clear_toolbar(win['controls2'].TKCanvas)
+        if mode2 is False: continue
+        fig2 = Figure(figsize=(5, 6))
+        fig2.subplots_adjust(0,0,1,1,0,0)
+        ax2 = fig2.add_subplot(1, 1, 1)
+        ax2.axis('off')
+        canvas2 = FigureCanvasTkAgg(fig2, win['canvas2'].Widget)
+        plot_widget2 = canvas2.get_tk_widget()
+        plot_widget2.grid(row=0, column=0)
+        canvas2.draw()
+
         if p1:
-            fig1, ax1 = plt.subplots()
             text1, ax1 = visualise_qep(json.loads(p1), ax1)
             win['tree1'].update(text1)
-            canvas1 = FigureCanvasTkAgg(fig1, win['canvas1'].Widget)
-            plot_widget1 = canvas1.get_tk_widget()
-            plot_widget1.grid(row=0, column=0)
+            toolbar1 = NavigationToolbar2Tk(canvas1, win['controls1'].TKCanvas)
+            toolbar1.update()
             canvas1.draw()
 
         if p2:
-            fig2, ax2 = plt.subplots()
             text2, ax2 = visualise_qep(json.loads(p2), ax2)
             win['tree2'].update(text2)
-            canvas2 = FigureCanvasTkAgg(fig2, win['canvas2'].Widget)
-            plot_widget2 = canvas2.get_tk_widget()
-            plot_widget2.grid(row=0, column=0)
+            toolbar1 = NavigationToolbar2Tk(canvas2, win['controls2'].TKCanvas)
+            toolbar1.update()
             canvas2.draw()
-        win.finalize().maximize()
-        # gui.visualise_graph(p1)
 
     if event == 'Reset':
         gui.reset(win)
