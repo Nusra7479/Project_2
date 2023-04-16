@@ -4,7 +4,7 @@ class Analyzer_GUI:
     def create_win(self):
         sg.theme("DarkBlue3")
         sg.set_options(font = 'Bahnschrift')
-        samples = ["Test Case " + str(i) for i in range(len(self.get_sample_queries()))]
+        samples = ["Test Case " + str(i+1) for i in range(len(self.get_sample_queries()))]
 
         col1_layout = [[sg.Text("Input Query 1:")],
                        [sg.Multiline(key='q1', size=(50,5))],
