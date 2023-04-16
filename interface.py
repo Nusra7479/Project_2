@@ -106,6 +106,8 @@ class Analyzer_GUI:
         win['p1'].update('')
         win['p2'].update('')
         win['res'].update('')
+        win['tree1'].update('')
+        win['tree2'].update('')
 
     def preview_fonts(self):
         '''
