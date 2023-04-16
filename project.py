@@ -26,7 +26,7 @@ while True:
 
     if event == 'Test':
         samples = gui.get_sample_queries()
-        samples_ind = int(values['samples'][-1])
+        samples_ind = int(values['samples'].split(" ")[-1]) - 1
         q_no = values['sam_q']
         if q_no == 'Query 1':
             q1 = samples[samples_ind]
@@ -46,16 +46,18 @@ while True:
         if not (p1 and p2):
             sg.Popup('Please input 2 query plans')
             continue
-        ########################### Insert Explanation To Be Displayed Below ######################
+
         p1_json = json.loads(p1)
         p2_json = json.loads(p2)
-        explanation = explain_changes(p1_json, p2_json)
-        ############################################################################################
-        print(explanation)
-        if explanation is None:
-            sg.Popup("More than 1 change in query plans detected")
-
-        win['res'].update(explanation)
+        
+        try:
+            explanation = explain_changes(p1_json, p2_json)
+            print(explanation)
+            if explanation is None:
+                sg.Popup("More than 1 change in query plans detected")
+            win['res'].update(explanation)  
+        except ValueError:
+            win['res'].update("Error: The difference between the query plans is too large")
 
     if event == 'Generate Query Plan':
         if not explain:
