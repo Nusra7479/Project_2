@@ -196,43 +196,44 @@ def generate_explanation(node1, node2):
     explanation = []
     # If number of nodes in both trees are identical
     if count1 == count2:
+
         # Same or different scans
         if "Scan" in node1.operation and "Scan" in node2.operation:
-            # As long as different tables, generic explanation
+            # As long as different tables, just return generic explanation
             if node1.relationName != node2.relationName:
-                    explanation.append("The table '{relation2}' has been scanned instead of the table '{relation1}'.".format(relation2 = node2.relationName, relation1 = node1.relationName))
+                explanation.append("The table '{relation2}' has been scanned instead of the table '{relation1}'.".format(relation2 = node2.relationName, relation1 = node1.relationName))
+                return explanation
 
-        else:
-            if node1.operation != node2.operation:
-                key = (node1.operation, node2.operation)
-                mapping = explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}.")
-                if node1.operation in joins and node2.operation in joins:
-                    rows1 = node1.children[0].rows
-                    rows2 = node1.children[1].rows
-                    rows3 = node2.children[0].rows
-                    rows4 = node2.children[1].rows
+        if node1.operation != node2.operation:
+            key = (node1.operation, node2.operation)
+            mapping = explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}.")
+            if node1.operation in joins and node2.operation in joins:
+                rows1 = node1.children[0].rows
+                rows2 = node1.children[1].rows
+                rows3 = node2.children[0].rows
+                rows4 = node2.children[1].rows
 
-                    if rows3 > rows1 and rows4 > rows2:
-                        explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
-                    if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
-                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
-                    if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
-                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
-                    if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
-                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
-                    if node1.operation == "Hash Join" and node2.operation == "Merge Join":
-                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
-                    if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
-                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
-                    if node1.operation == "Merge Join" and node2.operation == "Hash Join":
-                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
-                # Different scans
-                elif "Scan" in node1.operation and "Scan" in node2.operation:
-                    # Must have Relation Name because scan
-                    # Must be same relation
-                    explanation.append(mapping)
-                else:
-                    explanation.append(mapping)    
+                if rows3 > rows1 and rows4 > rows2:
+                    explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
+                if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
+                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
+                if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
+                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
+                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
+                if node1.operation == "Hash Join" and node2.operation == "Merge Join":
+                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
+                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
+                if node1.operation == "Merge Join" and node2.operation == "Hash Join":
+                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
+            # Different scans
+            elif "Scan" in node1.operation and "Scan" in node2.operation:
+                # Must have Relation Name because scan
+                # Must be same relation because of above check
+                explanation.append(mapping)
+            else:
+                explanation.append(mapping)    
                     
 
         edit_distance = min_edit_distance(node1.children, node2.children)

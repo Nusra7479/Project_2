@@ -42,13 +42,13 @@ class Analyzer_GUI:
             [sg.Push(), sg.Text("CZ4031 QEP Analyser", font='Bahnschrift 30'), sg.Push()],
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button('Connect to PostgreSQL Database'), sg.Push()],
-            [sg.Push(), sg.Combo(values=samples, key='samples', size=(20,1), readonly=True), sg.Combo(values=['Query 1', 'Query 2'], key='sam_q', size=(20,1), readonly=True, default_value='Query 1'),
+            [sg.Push(), sg.Combo(values=samples, key='samples', size=(20,1), readonly=True, default_value='Test Case 1'), sg.Combo(values=['Query 1', 'Query 2'], key='sam_q', size=(20,1), readonly=True, default_value='Query 1'),
              sg.Button('Test'), sg.Button("Reset", button_color='red'), sg.Push()],
             [sg.Sizer(v_pixels=40)],
             [sg.Push(), sg.Column(col1_layout), sg.VSeparator(), sg.Column(col2_layout), sg.Push(),],
             [sg.Sizer(v_pixels=10)],
             [sg.Push(), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
-            [sg.Text("Rsults:", font='Bahnschrift 25')],
+            [sg.Text("Results:", font='Bahnschrift 25')],
             [sg.TabGroup([[exp_tab, img_tab]], expand_y=True, expand_x=True)],
         ]
         win_layout = [[sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col')]]
@@ -69,14 +69,14 @@ class Analyzer_GUI:
 
     def get_sample_queries(self):
         samples = [
-                #     "select * from public.customer",
-                #    "select * from public.customer limit 100",
-                #    """select C.c_name, C.c_address, O.o_totalprice
-                #       from public.customer as C join public.orders as O on C.c_custkey = O.o_custkey
-                #       where C.c_acctbal < 5000
-                #       limit 100"""
-                    "select n_nationkey from nation, region",
-                    "select n_nationkey from nation join region on nation.n_regionkey = region.r_regionkey"
+                    "select n_nationkey from nation",
+                    "select n_nationkey from nation limit 100",
+                    "select * from customer join orders on c_custkey = o_orderkey",
+                    "select * from customer join orders on c_custkey = o_orderkey where c_custkey < 50", 
+                    "select * from customer",
+                    "select * from customer where c_nationkey = 1",
+                    "select * from customer",
+                    "select * from customer where c_custkey = 10"
                    ]
         return samples
 
