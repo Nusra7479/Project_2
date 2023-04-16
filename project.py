@@ -21,7 +21,10 @@ while True:
     event, values = win.read()
     if event == 'Connect to PostgreSQL Database':
         connection_string = gui.get_connection_string() # connection_string format: "db_name=<> user=<> password=<>" (no commas)
-        explain = Explain(connection_string)
+        try:
+            explain = Explain(connection_string)
+        except:
+            sg.Popup("Connection Failed")
         print("conn", connection_string)
 
     if event == 'Test':

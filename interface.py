@@ -24,15 +24,19 @@ class Analyzer_GUI:
 
 
         img_col = sg.Column([[
+            sg.Push(),
             sg.Column(
                 [[sg.Text("Query Plan 1", size=(None, 2))], [sg.Push(), sg.Canvas(key='canvas1', size=(None, 800),), sg.Push()], [sg.Canvas(key='controls1')], [sg.Text(key='tree1')]],
                  expand_y=True, expand_x=True,
             ),
+            sg.Push(),
             sg.VSeparator(),
+            sg.Push(),
             sg.Column(
                 [[sg.Text("Query Plan 2", size=(None, 2))], [sg.Push(), sg.Canvas(key='canvas2', size=(None, 800),), sg.Push()],[sg.Canvas(key='controls2')], [sg.Text(key='tree2')]],
                 expand_y=True, expand_x=True,
-            )
+            ),
+            sg.Push(),
         ]],
         expand_y=True, expand_x=True, scrollable=True,vertical_alignment='center', vertical_scroll_only=True, size=(None, 800))
 
@@ -53,7 +57,7 @@ class Analyzer_GUI:
         ]
         win_layout = [[sg.Push(), sg.Column(win_layout, vertical_scroll_only=True, scrollable=True, vertical_alignment='center', expand_y=True, expand_x=True, key='final_col'), sg.Push()]]
 
-        window = sg.Window("Demo", win_layout, resizable=True)
+        window = sg.Window("CZ4031 QEP Analyser", win_layout, resizable=True)
         window.finalize().maximize()
 
         return window
