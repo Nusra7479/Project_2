@@ -215,17 +215,17 @@ def generate_explanation(node1, node2):
                     if rows3 > rows1 and rows4 > rows2:
                         explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
                     if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
-                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
+                        explanation.append("The nested loop join changed to a hash join because it is more efficient for the equi-join condition specified.")
                     if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
-                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                        explanation.append("The nested loop join changed to a merge join because one or both tables participating in the join can be sorted efficiently on the join key.")    
                     if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
-                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
+                        explanation.append("The hash join changed to a nested loop join because it is more efficient for the non-equi join condition specified.")        
                     if node1.operation == "Hash Join" and node2.operation == "Merge Join":
-                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                        explanation.append("The hash join changed to a merge join because one or both tables participating in the join can be sorted efficiently on the join key.")    
                     if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
-                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
+                        explanation.append("The merge join changed to a nested loop join because it is more efficient for the non-equi join condition specified.")  
                     if node1.operation == "Merge Join" and node2.operation == "Hash Join":
-                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
+                        explanation.append("The merge join changed to a hash join because it is more efficient for the equi-join condition specified.")     
                 # Different scans
                 elif "Scan" in node1.operation and "Scan" in node2.operation:
                     # Must have Relation Name because scan
