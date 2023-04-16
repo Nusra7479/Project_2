@@ -59,12 +59,14 @@ class Analyzer_GUI:
 
     def get_sample_queries(self):
         samples = [
-                    "select * from public.customer",
-                   "select * from public.customer limit 100",
-                   """select C.c_name, C.c_address, O.o_totalprice
-                      from public.customer as C join public.orders as O on C.c_custkey = O.o_custkey
-                      where C.c_acctbal < 5000
-                      limit 100"""
+                #     "select * from public.customer",
+                #    "select * from public.customer limit 100",
+                #    """select C.c_name, C.c_address, O.o_totalprice
+                #       from public.customer as C join public.orders as O on C.c_custkey = O.o_custkey
+                #       where C.c_acctbal < 5000
+                #       limit 100"""
+                    "select n_nationkey from nation, region",
+                    "select n_nationkey from nation join region on nation.n_regionkey = region.r_regionkey"
                    ]
         return samples
 

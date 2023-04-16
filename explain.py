@@ -171,7 +171,20 @@ def generate_explanation(node1, node2):
                 rows3 = node2.children[0].rows
                 rows4 = node2.children[1].rows
 
-                explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
+                if rows3 > rows1 and rows4 > rows2:
+                    explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
+                if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
+                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
+                if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
+                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
+                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
+                if node1.operation == "Hash Join" and node2.operation == "Merge Join":
+                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
+                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
+                if node1.operation == "Merge Join" and node2.operation == "Hash Join":
+                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
             # Different scans
             elif "Scan" in node1.operation and "Scan" in node2.operation:
                 # Must have Relation Name because scan
@@ -226,26 +239,24 @@ joins = [
 ]
 
 explanation_mapping = {
-    ('Hash Join', 'Merge Join'): 'A hash join has been changed to a sort-merge join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Merge Join', 'Hash Join'): 'A sort-merge join has been changed to a hash join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Nested Loop', 'Hash Join'): 'A nested loop join has been changed to a hash join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Hash Join', 'Nested Loop'): 'A hash join has been changed to a nested loop join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Nested Loop', 'Merge Join'): 'A nested loop join has been changed to a sort-merge join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Merge Join', 'Nested Loop'): 'A sort-merge join has been changed to a nested loop join. This is because the number of rows in the first participating table has changed ' +
-      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}.',
-    ('Seq Scan', 'Index Scan'): 'A sequential scan has been changed to an index scan, as an index was found to improve performance.',
-    ('Index Scan', 'Seq Scan'): 'An index scan has been changed to a sequential scan, as a sequential scan was determined to be more efficient in this case.',
-    ('bitmap_index_scan', 'Index Scan'): 'A bitmap index scan has been changed to an index scan due to changes in the WHERE clause or the addition of an ORDER BY clause.',
-    ('Index Scan', 'bitmap_index_scan'): 'An index scan has been changed to a bitmap index scan because it was determined to be more efficient for the query.',
-    ('bitmap_heap_scan', 'Seq Scan'): 'A bitmap heap scan has been changed to a sequential scan because it was determined to be more efficient for the query.',
-    ('Seq Scan', 'bitmap_heap_scan'): 'A sequential scan has been changed to a bitmap heap scan because it was determined to be more efficient for the query.',
-    ('materialize', 'no_materialize'): 'Materialization has been removed due to changes in the query that made it unnecessary.',
-    ('no_materialize', 'materialize'): 'Materialization has been added to improve the performance of a subquery or common table expression.',
+    ('Hash Join', 'Merge Join'): 'The number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Merge Join', 'Hash Join'): 'The number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Nested Loop', 'Hash Join'): 'The number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Hash Join', 'Nested Loop'): 'This is because the number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Nested Loop', 'Merge Join'): 'The number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Merge Join', 'Nested Loop'): 'The number of rows in the first participating table has changed ' +
+      'from {n1c1} to {n2c1} and the number of rows in the second participating table has changed from  {n1c2} to {n2c2}. ',
+    ('Seq Scan', 'Index Scan'): 'A sequential scan has been changed to an index scan, as an index was found to improve performance. ',
+    ('Index Scan', 'Seq Scan'): 'An index scan has been changed to a sequential scan, as a sequential scan was determined to be more efficient in this case. ',
+    ('Bitmap Index Scan', 'Index Scan'): 'A bitmap index scan has been changed to an index scan due to changes in the WHERE clause or the addition of an ORDER BY clause. ',
+    ('Index Scan', 'Bitmap Index Scan'): 'An index scan has been changed to a bitmap index scan because it was determined to be more efficient for the query. ',
+    ('Bitmap Heap Scan', 'Seq Scan'): 'A bitmap heap scan has been changed to a sequential scan because it was determined to be more efficient for the query. ',
+    ('Seq Scan', 'Bitmap Heap Scan'): 'A sequential scan has been changed to a bitmap heap scan because it was determined to be more efficient for the query. ',
 }
 
 

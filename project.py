@@ -48,7 +48,6 @@ while True:
         p2_json = json.loads(p2)
         explanation = explain_changes(p1_json, p2_json)
         ############################################################################################
-        print(explanation)
         win['res'].update(explanation)
 
     if event == 'Generate Query Plan':
