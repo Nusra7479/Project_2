@@ -135,6 +135,38 @@ def compare_nodes(node1, node2):
 def compare_trees(tree1, tree2):
     return compare_nodes(tree1, tree2)
 
+def count_nodes(root):
+    if not root.children:
+        return 1
+    return 1 + sum(count_nodes(child) for child in root.children)
+
+def check_tree_difference(node1, node2):
+    count1 = count_nodes(node1)
+    count2 = count_nodes(node2)
+    difference = abs(count1 - count2)
+
+    if difference > 1:
+        raise ValueError("The number of insertion or deletion of nodes in the QEP tree is more than 1.")
+    return count1, count2
+
+def find_added_or_deleted_node(node1, node2, is_deletion):
+    if not node1 or not node2:
+        return node1 or node2
+
+    if node1.operation != node2.operation:
+        return node1 if is_deletion else node2
+
+    result = None
+    for child1, child2 in zip(node1.children, node2.children):
+        result = find_added_or_deleted_node(child1, child2, is_deletion)
+        if result:
+            break
+
+    if not result and len(node1.children) != len(node2.children):
+        extra_child = node1.children[len(node2.children)] if is_deletion else node2.children[len(node1.children)]
+        result = extra_child
+
+    return result
 
 def min_edit_distance(node1_children, node2_children, memo=None):
     if memo is None:
@@ -160,73 +192,82 @@ def min_edit_distance(node1_children, node2_children, memo=None):
     return result
 
 def generate_explanation(node1, node2):
+    count1, count2 = check_tree_difference(node1, node2)
     explanation = []
+    # If number of nodes in both trees are identical
+    if count1 == count2:
+        # Same or different scans
+        if "Scan" in node1.operation and "Scan" in node2.operation:
+            # As long as different tables, generic explanation
+            if node1.relationName != node2.relationName:
+                    explanation.append("The table '{relation2}' has been scanned instead of the table '{relation1}'.".format(relation2 = node2.relationName, relation1 = node1.relationName))
 
-    # Same or different scans
-    if "Scan" in node1.operation and "Scan" in node2.operation:
-        # As long as different tables, generic explanation
-        if node1.relationName != node2.relationName:
-                explanation.append("The table '{relation2}' has been scanned instead of the table '{relation1}'.".format(relation2 = node2.relationName, relation1 = node1.relationName))
+        else:
+            if node1.operation != node2.operation:
+                key = (node1.operation, node2.operation)
+                mapping = explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}.")
+                if node1.operation in joins and node2.operation in joins:
+                    rows1 = node1.children[0].rows
+                    rows2 = node1.children[1].rows
+                    rows3 = node2.children[0].rows
+                    rows4 = node2.children[1].rows
 
-    else:
-        if node1.operation != node2.operation:
-            key = (node1.operation, node2.operation)
-            mapping = explanation_mapping.get(key, f"The operation {node1.operation} has been changed to {node2.operation}.")
-            if node1.operation in joins and node2.operation in joins:
-                rows1 = node1.children[0].rows
-                rows2 = node1.children[1].rows
-                rows3 = node2.children[0].rows
-                rows4 = node2.children[1].rows
+                    if rows3 > rows1 and rows4 > rows2:
+                        explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
+                    if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
+                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
+                    if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
+                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                    if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
+                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
+                    if node1.operation == "Hash Join" and node2.operation == "Merge Join":
+                        explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
+                    if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
+                        explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
+                    if node1.operation == "Merge Join" and node2.operation == "Hash Join":
+                        explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
+                # Different scans
+                elif "Scan" in node1.operation and "Scan" in node2.operation:
+                    # Must have Relation Name because scan
+                    # Must be same relation
+                    explanation.append(mapping)
+                else:
+                    explanation.append(mapping)    
+                    
 
-                if rows3 > rows1 and rows4 > rows2:
-                    explanation.append(mapping.format(n1c1 = rows1, n1c2 = rows2, n2c1 = rows3, n2c2 = rows4))
-                if node1.operation == "Nested Loop" and node2.operation == "Hash Join":
-                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")
-                if node1.operation == "Nested Loop" and node2.operation == "Merge Join":
-                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
-                if node1.operation == "Hash Join" and node2.operation == "Nested Loop":
-                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")        
-                if node1.operation == "Hash Join" and node2.operation == "Merge Join":
-                    explanation.append("A merge join is used because one or both tables participating in the join can be sorted efficiently on the join key.")    
-                if node1.operation == "Merge Join" and node2.operation == "Nested Loop":
-                    explanation.append("A nested loop join is used because it is more efficient for the non-equi join condition specified.")  
-                if node1.operation == "Merge Join" and node2.operation == "Hash Join":
-                    explanation.append("A hash join is used because it is more efficient for the equi-join condition specified.")     
-            # Different scans
-            elif "Scan" in node1.operation and "Scan" in node2.operation:
-                # Must have Relation Name because scan
-                # Must be same relation
-                explanation.append(mapping)
-            else:
-                explanation.append(mapping)    
-                
+        edit_distance = min_edit_distance(node1.children, node2.children)
+        matched_indices = []
 
-    edit_distance = min_edit_distance(node1.children, node2.children)
-    matched_indices = []
+        for i, child1 in enumerate(node1.children):
+            min_dist = float('inf')
+            min_j = -1
 
-    for i, child1 in enumerate(node1.children):
-        min_dist = float('inf')
-        min_j = -1
+            for j, child2 in enumerate(node2.children):
+                if j not in matched_indices:
+                    dist = min_edit_distance(child1.children, child2.children)
+                    if dist < min_dist:
+                        min_dist = dist
+                        min_j = j
+
+            if min_j != -1:
+                matched_indices.append(min_j)
+                explanation.extend(generate_explanation(child1, node2.children[min_j]))
+
+        for i, child1 in enumerate(node1.children):
+            if i not in matched_indices:
+                explanation.append(f"A {child1.operation} node has been removed from the {node1.operation} operation.")
 
         for j, child2 in enumerate(node2.children):
             if j not in matched_indices:
-                dist = min_edit_distance(child1.children, child2.children)
-                if dist < min_dist:
-                    min_dist = dist
-                    min_j = j
+                explanation.append(f"A new {child2.operation} node has been added to the {node2.operation} operation.")
+    else:
+        is_deletion = count_nodes(node1) > count_nodes(node2)
+        diff_node = find_added_or_deleted_node(node1, node2, is_deletion)
 
-        if min_j != -1:
-            matched_indices.append(min_j)
-            explanation.extend(generate_explanation(child1, node2.children[min_j]))
-
-    for i, child1 in enumerate(node1.children):
-        if i not in matched_indices:
-            explanation.append(f"A {child1.operation} node has been removed from the {node1.operation} operation.")
-
-    for j, child2 in enumerate(node2.children):
-        if j not in matched_indices:
-            explanation.append(f"A new {child2.operation} node has been added to the {node2.operation} operation.")
-
+        if is_deletion:
+            explanation.append(f"A {diff_node.operation} node has been deleted.")
+        else:
+            explanation.append(f"A {diff_node.operation} node has been inserted.")
     return explanation
 
 
