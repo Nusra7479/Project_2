@@ -51,7 +51,7 @@ class Analyzer_GUI:
             [sg.Sizer(v_pixels=40)],
             [sg.Push(), sg.Column(col1_layout), sg.VSeparator(), sg.Column(col2_layout), sg.Push(),],
             [sg.Sizer(v_pixels=10)],
-            [sg.Push(), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
+            [sg.Push(), sg.Button("Generate Query Plan"), sg.Sizer(h_pixels=20), sg.Button("Generate Explanation"), sg.Sizer(h_pixels=20), sg.Button("Visualise Query Plan"), sg.Push()],
             [sg.Text("Results:", font='Bahnschrift 25')],
             [sg.TabGroup([[exp_tab, img_tab]], expand_y=True, expand_x=True)],
         ]
