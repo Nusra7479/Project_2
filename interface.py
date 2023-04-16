@@ -62,7 +62,7 @@ class Analyzer_GUI:
         if tool_canvas.children:
             for child in tool_canvas.winfo_children():
                 if child.mode:
-                    sg.Popup("Deselect toolbar")
+                    sg.Popup("Please deselect toolbar options and try again")
                     return False
                 child.destroy()
         return True
@@ -76,7 +76,19 @@ class Analyzer_GUI:
                     "select * from customer",
                     "select * from customer where c_nationkey = 1",
                     "select * from customer",
-                    "select * from customer where c_custkey = 10"
+                    "select * from customer where c_custkey = 10",
+                    """SELECT *
+                    FROM orders
+                    JOIN customer ON c_custkey = o_custkey
+                    LEFT JOIN nation ON c_nationkey = n_nationkey
+                    WHERE o_totalprice = 1000
+                    ORDER BY o_totalprice, n_nationkey""",
+                    """SELECT c_name
+                    FROM orders
+                    JOIN customer ON c_custkey = o_custkey
+                    LEFT JOIN nation ON c_nationkey = n_nationkey
+                    WHERE o_totalprice = 1000
+                    ORDER BY o_totalprice, n_nationkey"""
                    ]
         return samples
 

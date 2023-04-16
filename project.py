@@ -52,6 +52,8 @@ while True:
         explanation = explain_changes(p1_json, p2_json)
         ############################################################################################
         print(explanation)
+        if explanation is None:
+            sg.Popup("More than 1 change in query plans detected")
 
         win['res'].update(explanation)
 
